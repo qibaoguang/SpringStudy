@@ -17,9 +17,11 @@ import javax.servlet.http.HttpSession;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Bean;
 import org.springframework.web.context.ServletContextAware;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfig;
 
+import freemarker.ext.beans.BeansWrapperBuilder;
 import freemarker.ext.jsp.TaglibFactory;
 import freemarker.ext.servlet.AllHttpScopesHashModel;
 import freemarker.ext.servlet.FreemarkerServlet;
@@ -33,7 +35,7 @@ import freemarker.template.SimpleHash;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 
-public abstract class FreeMakerView implements View, ServletContextAware {
+public abstract class FreeMarkerView implements View, ServletContextAware {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -46,7 +48,7 @@ public abstract class FreeMakerView implements View, ServletContextAware {
     private ServletContext servletContext;
     private ServletContextHashModel servletContextHashModel;
 
-    public FreeMakerView(final FreeMarkerConfig config, final String encoding,
+    public FreeMarkerView(final FreeMarkerConfig config, final String encoding,
             final String contentType) {
         if (config == null) {
             throw new NullPointerException("FreeMarkerConfig required ");
@@ -88,7 +90,7 @@ public abstract class FreeMakerView implements View, ServletContextAware {
     }
 
     protected String getViewName() {
-        return FreeMakerView.class.getSimpleName();
+        return FreeMarkerView.class.getSimpleName();
     }
 
     public void setServletContext(ServletContext servletContext) {
@@ -217,11 +219,11 @@ public abstract class FreeMakerView implements View, ServletContextAware {
         }
 
         public ServletContext getServletContext() {
-            return FreeMakerView.this.getServletContext();
+            return FreeMarkerView.this.getServletContext();
         }
 
         public String getServletName() {
-            return FreeMakerView.this.getViewName();
+            return FreeMarkerView.this.getViewName();
         }
     }
 
