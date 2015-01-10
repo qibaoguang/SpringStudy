@@ -1,7 +1,7 @@
 Spring Boot初级教程
 =======================
 
-### Spring Boot安装
+### 一. Spring Boot安装
 环境要求：Java 8，Maven 3.2或Gradle 1.12
 
 1. 添加Spring Boot的依赖
@@ -46,6 +46,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
 注：Spring Boot依赖的groupId是org.springframework.boot，一般Maven pom需要继承spring-boot-starter-parent，然后声明相应[Starter POMs](http://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#using-boot-starter-poms).如果不想继承spring-boot-starter-parent，可以使用import作用域。
 
 2. 安装Spring Boot命令行工具
+
 下载[tar包](http://repo.spring.io/release/org/springframework/boot/spring-boot-cli/1.2.1.RELEASE/spring-boot-cli-1.2.1.RELEASE-bin.tar.gz)，解压，按照INSTALL.txt操作，SO EASY！
 
 
