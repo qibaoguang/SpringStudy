@@ -3,11 +3,17 @@ Spring Boot初级教程
 
 ### Spring Boot安装
 环境要求：Java 8，Maven 3.2或Gradle 1.12
+
 1. 添加Spring Boot的依赖
 <pre>
 &lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+
+&lt;project xmlns="http://maven.apache.org/POM/4.0.0"
+
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+
 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+    
     http://maven.apache.org/xsd/maven-4.0.0.xsd"&gt;
 
     &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
