@@ -41,7 +41,7 @@ Spring Boot初级教程
 
 </project>
 </pre>
-注：Spring Boot依赖的groupId是org.springframework.boot，
+注：Spring Boot依赖的groupId是org.springframework.boot，一般Maven pom需要继承spring-boot-starter-parent，然后声明相应[Starter POMs](http://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#using-boot-starter-poms).
 
 
 
