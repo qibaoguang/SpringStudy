@@ -46,8 +46,32 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
 注：Spring Boot依赖的groupId是org.springframework.boot，一般Maven pom需要继承spring-boot-starter-parent，然后声明相应[Starter POMs](http://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#using-boot-starter-poms).如果不想继承spring-boot-starter-parent，可以使用import作用域。
 
 2. 安装Spring Boot命令行工具
+<pre>
+$ gvm install springboot
+$ spring --version
+$ gvm ls springboot
+$ . ~/.gvm/springboot/current/shell-completion/bash/spring
+$ spring <HIT TAB HERE>
+  grab  help  jar  run  test  version
+</pre>
 
-下载[tar包](http://repo.spring.io/release/org/springframework/boot/spring-boot-cli/1.2.1.RELEASE/spring-boot-cli-1.2.1.RELEASE-bin.tar.gz)，解压，按照INSTALL.txt操作，SO EASY！
+3. Quick Start
+创建app.groovy，代码如下：
+<pre>
+@RestController
+class ThisWillActuallyRun {
+
+    @RequestMapping("/")
+    String home() {
+        "Hello World!"
+    }
+
+}
+运行：
+<pre>
+$ spring run app.groovy
+</pre>
+</pre>
 
 
 
