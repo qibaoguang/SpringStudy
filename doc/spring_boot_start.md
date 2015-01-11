@@ -4,7 +4,7 @@ Spring Boot初级教程
 ### 一. Spring Boot安装
 环境要求：Java 8，Maven 3.2或Gradle 1.12
 
-1. maven方式
+#### 1.Maven方式
 <pre>
 &lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -45,7 +45,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
 </pre>
 注：Spring Boot依赖的groupId是org.springframework.boot，一般Maven pom需要继承spring-boot-starter-parent，然后声明相应[Starter POMs](http://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#using-boot-starter-poms).如果不想继承spring-boot-starter-parent，可以使用import作用域。
 
-2. Gradle方式
+#### 2.Gradle方式
 
 build.gradle脚本：
 <pre>
@@ -80,7 +80,7 @@ dependencies {
 }
 </pre>
 
-3. 安装Spring Boot命令行工具
+#### 3.安装Spring Boot命令行工具
 
 <pre>
 $ gvm install springboot
@@ -91,7 +91,7 @@ $ spring <HIT TAB HERE>
   grab  help  jar  run  test  version
 </pre>
 
-4. Quick Start
+#### 4.Quick Start
 
 创建app.groovy，代码如下：
 <pre>
