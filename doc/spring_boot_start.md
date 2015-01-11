@@ -79,7 +79,9 @@ dependencies {
     testCompile("org.springframework.boot:spring-boot-starter-test")
 }
 </pre>
+
 3. 安装Spring Boot命令行工具
+
 <pre>
 $ gvm install springboot
 $ spring --version
@@ -105,9 +107,6 @@ class ThisWillActuallyRun {
 <pre>
 $ spring run app.groovy
 </pre>
-
-
-
 
 
 
