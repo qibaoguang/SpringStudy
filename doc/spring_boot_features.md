@@ -8,7 +8,7 @@ Spring Boot特性
 * Web环境
 * 命令行启动器
 * Application退出
-* 
+
 ### Externalized 配置
 * 访问命令行属性
 * Application属性文件
