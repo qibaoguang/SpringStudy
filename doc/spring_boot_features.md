@@ -70,9 +70,67 @@ new SpringApplicationBuilder()
 **注**：当JUnit测试里使用SpringApplication时，调用setWebEnvironment(false)是可取的。
 
 * 命令行启动器
+
+如果你想获取原始的命令行参数，或一旦SpringApplication启动，你需要运行一些特定的代码，你可以实现CommandLineRunner接口。在所有实现该接口的Spring beans上将调用run(String… args)方法。
+```java
+import org.springframework.boot.*
+import org.springframework.stereotype.*
+
+@Component
+public class MyBean implements CommandLineRunner {
+    public void run(String... args) {
+        // Do something...
+    }
+}
+```
+如果一些CommandLineRunner beans被定义必须以特定的次序调用，你可以额外实现org.springframework.core.Ordered接口或使用org.springframework.core.annotation.Order注解。
+
 * Application退出
 
-### Externalized 配置
+每个SpringApplication在退出时为了确保ApplicationContext被优雅的关闭，将会注册一个JVM的shutdown钩子。所有标准的Spring生命周期回调（比如，DisposableBean接口或@PreDestroy注解）都能使用。
+
+此外，如果beans想在应用结束时返回一个特定的退出码（exit code），可以实现org.springframework.boot.ExitCodeGenerator接口。
+
+### 外化配置
+
+Spring Boot允许外化（externalize）你的配置，这样你能够在不同的环境下使用相同的代码。你可以使用properties文件，YAML文件，环境变量和命令行参数来外化配置。使用@Value注解，可以直接将属性值注入到你的beans中，并通过Spring的Environment抽象或绑定到结构化对象来访问。
+
+Spring Boot使用一个非常特别的PropertySource次序来允许对值进行合理的覆盖，需要以下面的次序考虑属性：
+
+1. 命令行参数
+2. 来自于java:comp/env的JNDI属性
+3. Java系统属性（System.getProperties()）
+4. 操作系统环境变量
+5. 只有在random.*里包含的属性会产生一个RandomValuePropertySource
+6. 在打包的jar外的应用程序配置文件（application.properties，包含YAML和profile变量）
+7. 在打包的jar内的应用程序配置文件（application.properties，包含YAML和profile变量）
+8. 在@Configuration类上的@PropertySource注解
+9. 默认属性（使用SpringApplication.setDefaultProperties指定）
+
+下面是一个具体的示例（假设你开发一个使用name属性的@Component）：
+```java
+import org.springframework.stereotype.*
+import org.springframework.beans.factory.annotation.*
+
+@Component
+public class MyBean {
+    @Value("${name}")
+    private String name;
+    // ...
+}
+```
+你可以将一个application.properties文件捆绑到jar内，用来提供一个合理的默认name属性值。当运行在生产环境时，可以在jar外提供一个application.properties文件来覆盖name属性。对于一次性的测试，你可以使用特定的命令行开关启动（比如，java -jar app.jar --name="Spring"）。
+
+RandomValuePropertySource在注入随机值（比如，密钥或测试用例）时很有用。它能产生整数，longs或字符串，比如：
+```java
+my.secret=${random.value}
+my.number=${random.int}
+my.bignumber=${random.long}
+my.number.less.than.ten=${random.int(10)}
+my.number.in.range=${random.int[1024,65536]}
+```
+random.int*语法是OPEN value (,max) CLOSE，此处OPEN，CLOSE可以是任何字符，并且value，max是整数。如果提供max，那么value是最小的值，max是最大的值（不包含在内）。
+
 * 访问命令行属性
 * Application属性文件
 * 特定的Profile属性
