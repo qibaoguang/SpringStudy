@@ -14,11 +14,12 @@ public static void main(String[] args){
 在banner.txt中可以使用如下的变量:
 
 | 变量        | 描述     | 
-| ----------- | --------:|
+| ----------- | :--------|
 |${application.version}|MANIFEST.MF中声明的应用版本号，例如1.0|
-|${application.formatted-version}|MANIFEST.MF中声明的被格式化后的应用版本号（被括号包裹且以v作为前缀），用于显示，例如(v1.0)|
+|${application.formatted-version}|MANIFEST.MF中声明的被格式化后的应用版本号
+（被括号包裹且以v作为前缀），用于显示，例如(v1.0)|
 |${spring-boot.version}|正在使用的Spring Boot版本号，例如1.2.2.BUILD-SNAPSHOT|
-|${spring-boot.formatted-version}|正在使用的Spring-Boot被格式化后的版本号（被括号包裹且以v作为前缀），用于显示，例如(v1.2.2.BUILD-SNAPSHOT)|
+|${spring-boot.formatted-version}|正在使用的Spring-Boot被格式化后的版本号（被括号包裹且以v作为前缀）,  用于显示，例如(v1.2.2.BUILD-SNAPSHOT)|
 
 **注**：如果想以编程的方式产生一个banner，可以使用SpringBootApplication.setBanner(…)方法。使用org.springframework.boot.Banner接口，实现你自己的printBanner()方法。
 
