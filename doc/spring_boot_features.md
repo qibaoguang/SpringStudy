@@ -9,8 +9,17 @@ public static void main(String[] args){
 ```
 * 自定义Banner
   
-你可以改变启动过程打印的banner，可以通过在classpath下添加一个banner.txt或设置banner.location指定相应的文件。
+通过在classpath下添加一个banner.txt或设置banner.location来指定相应的文件可以改变启动过程中打印的banner。如果这个文件有特殊的编码，你可以使用banner.encoding设置它（默认为UTF-8）。
 
+在banner.txt中可以使用如下的变量:
+| 变量        | 描述     | 
+| ----------- | --------:|
+|${application.version}|MANIFEST.MF中声明的应用版本号，例如1.0|
+|${application.formatted-version}|MANIFEST.MF中声明的被格式化后的应用版本号（被括号包裹且以v作为前缀），用于显示，例如(v1.0)|
+|${spring-boot.version}|正在使用的Spring Boot版本号，例如1.2.2.BUILD-SNAPSHOT|
+|${spring-boot.formatted-version}|正在使用的Spring-Boot被格式化后的版本号（被括号包裹且以v作为前缀），用于显示，例如(v1.2.2.BUILD-SNAPSHOT)|
+
+注：如果想以编程的方式产生一个banner，可以使用SpringBootApplication.setBanner(…)方法。使用org.springframework.boot.Banner接口，实现你自己的printBanner()方法。
 
 * 自定义SpringApplication
 * 流畅的构建API
