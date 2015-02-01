@@ -1,7 +1,17 @@
 Spring Boot特性
 ===============
 ### SpringApplication
+SpringApplication类提供了一种从main()方法启动Spring应用的便捷方式。在很多情况下，你只需委托给SpringApplication.run这个静态方法：
+```java
+public static void main(String[] args){
+    SpringApplication.run(MySpringConfiguration.class, args);
+}
+```
 * 自定义Banner
+  
+你可以改变启动过程打印的banner，可以通过在classpath下添加一个banner.txt或设置banner.location指定相应的文件。
+
+
 * 自定义SpringApplication
 * 流畅的构建API
 * Application事件和监听器
