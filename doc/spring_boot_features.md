@@ -132,18 +132,219 @@ my.number.in.range=${random.int[1024,65536]}
 random.int*语法是OPEN value (,max) CLOSE，此处OPEN，CLOSE可以是任何字符，并且value，max是整数。如果提供max，那么value是最小的值，max是最大的值（不包含在内）。
 
 * 访问命令行属性
+
+默认情况下，SpringApplication将任何可选的命令行参数（以'--'开头，比如，--server.port=9000）转化为property，并将其添加到Spring Environment中。如上所述，命令行属性总是优先于其他属性源。
+
+如果你不想将命令行属性添加到Environment里，你可以使用SpringApplication.setAddCommandLineProperties(false)来禁止它们。
+
 * Application属性文件
+
+SpringApplication将从以下位置加载application.properties文件，并把它们添加到Spring Environment中：
+
+1. 当前目录下的一个/config子目录
+2. 当前目录
+3. 一个classpath下的/config包
+4. classpath根路径（root）
+
+这个列表是按优先级排序的（列表中位置高的将覆盖位置低的）。
+
+**注**：你可以使用YAML（'.yml'）文件替代'.properties'。
+
+如果不喜欢将application.properties作为配置文件名，你可以通过指定spring.config.name环境属性来切换其他的名称。你也可以使用spring.config.location环境属性来引用一个明确的路径（目录位置或文件路径列表以逗号分割）。
+```shell
+$ java -jar myproject.jar --spring.config.name=myproject
+//or
+$ java -jar myproject.jar --spring.config.location=classpath:/default.properties,classpath:/override.properties
+```
+如果spring.config.location包含目录（相对于文件），那它们应该以/结尾（在加载前，spring.config.name产生的名称将被追加到后面）。不管spring.config.location是什么值，默认的搜索路径classpath:,classpath:/config,file:,file:config/总会被使用。以这种方式，你可以在application.properties中为应用设置默认值，然后在运行的时候使用不同的文件覆盖它，同时保留默认配置。
+
+**注**：如果你使用环境变量而不是系统配置，大多数操作系统不允许以句号分割（period-separated）的key名称，但你可以使用下划线（underscores）代替（比如，使用SPRING_CONFIG_NAME代替spring.config.name）。如果你的应用运行在一个容器中，那么JNDI属性（java:comp/env）或servlet上下文初始化参数可以用来取代环境变量或系统属性，当然也可以使用环境变量或系统属性。
+
 * 特定的Profile属性
+
+除了application.properties文件，特定配置属性也能通过命令惯例application-{profile}.properties来定义。特定Profile属性从跟标准application.properties相同的路径加载，并且特定profile文件会覆盖默认的配置。
+
 * 属性占位符
+
+当application.properties里的值被使用时，它们会被存在的Environment过滤，所以你能够引用先前定义的值（比如，系统属性）。
+```java
+app.name=MyApp
+app.description=${app.name} is a Spring Boot application
+```
+**注**：你也能使用相应的技巧为存在的Spring Boot属性创建'短'变量，具体参考[Section 63.3, “Use ‘short’ command line arguments”](http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#howto-use-short-command-line-arguments)。
+
 * 使用YAML代替Properties
+
+[YAML](http://yaml.org/)是JSON的一个超集，也是一种方便的定义层次配置数据的格式。无论你何时将[SnakeYAML ](http://code.google.com/p/snakeyaml/)库放到classpath下，SpringApplication类都会自动支持YAML作为properties的替换。
+
+**注**：如果你使用'starter POMs'，spring-boot-starter会自动提供SnakeYAML。
+
 * 加载YAML
+
+Spring框架提供两个便利的类用于加载YAML文档，YamlPropertiesFactoryBean会将YAML作为Properties来加载，YamlMapFactoryBean会将YAML作为Map来加载。
+
+示例：
+```json
+environments:
+    dev:
+        url: http://dev.bar.com
+        name: Developer Setup
+    prod:
+        url: http://foo.bar.com
+        name: My Cool App
+```
+上面的YAML文档会被转化到下面的属性中：
+```java
+environments.dev.url=http://dev.bar.com
+environments.dev.name=Developer Setup
+environments.prod.url=http://foo.bar.com
+environments.prod.name=My Cool App
+```
+YAML列表被表示成使用[index]间接引用作为属性keys的形式，例如下面的YAML：
+```json
+my:
+   servers:
+       - dev.bar.com
+       - foo.bar.com
+```
+将会转化到下面的属性中:
+```java
+my.servers[0]=dev.bar.com
+my.servers[1]=foo.bar.com
+```
+使用Spring DataBinder工具绑定那样的属性（这是@ConfigurationProperties做的事），你需要确定目标bean中有个java.util.List或Set类型的属性，并且需要提供一个setter或使用可变的值初始化它，比如，下面的代码将绑定上面的属性：
+```java
+@ConfigurationProperties(prefix="my")
+public class Config {
+    private List<String> servers = new ArrayList<String>();
+    public List<String> getServers() {
+        return this.servers;
+    }
+}
+```
 * 在Spring环境中使用YAML暴露属性
+
+YamlPropertySourceLoader类能够用于将YAML作为一个PropertySource导出到Sprig Environment。这允许你使用熟悉的@Value注解和占位符语法访问YAML属性。
+
 * Multi-profile YAML文档
+
+你可以在单个文件中定义多个特定配置（profile-specific）的YAML文档，并通过一个spring.profiles key标示应用的文档。例如：
+```json
+server:
+    address: 192.168.1.100
+---
+spring:
+    profiles: development
+server:
+    address: 127.0.0.1
+---
+spring:
+    profiles: production
+server:
+    address: 192.168.1.120
+```
+在上面的例子中，如果development配置被激活，那server.address属性将是127.0.0.1。如果development和production配置（profiles）没有启用，则该属性的值将是192.168.1.100。
+
 * YAML缺点
+
+YAML文件不能通过@PropertySource注解加载。所以，在这种情况下，如果需要使用@PropertySource注解的方式加载值，那就要使用properties文件。
+
 * 类型安全的配置属性
+
+使用@Value("${property}")注解注入配置属性有时可能比较笨重，特别是需要使用多个properties或你的数据本身有层次结构。为了控制和校验你的应用配置，Spring Boot提供一个允许强类型beans的替代方法来使用properties。
+
+示例：
+```java
+@Component
+@ConfigurationProperties(prefix="connection")
+public class ConnectionSettings {
+    private String username;
+    private InetAddress remoteAddress;
+    // ... getters and setters
+}
+```
+当@EnableConfigurationProperties注解应用到你的@Configuration时，任何被@ConfigurationProperties注解的beans将自动被Environment属性配置。这种风格的配置特别适合与SpringApplication的外部YAML配置进行配合使用。
+```json
+# application.yml
+connection:
+    username: admin
+    remoteAddress: 192.168.1.1
+# additional configuration as required
+```
+为了使用@ConfigurationProperties beans，你可以使用与其他任何bean相同的方式注入它们。
+```java
+@Service
+public class MyService {
+    @Autowired
+    private ConnectionSettings connection;
+     //...
+    @PostConstruct
+    public void openConnection() {
+        Server server = new Server();
+        this.connection.configure(server);
+    }
+}
+```
+你可以通过在@EnableConfigurationProperties注解中直接简单的列出属性类来快捷的注册@ConfigurationProperties bean的定义。
+```java
+@Configuration
+@EnableConfigurationProperties(ConnectionSettings.class)
+public class MyConfiguration {
+}
+```
+**注**：使用@ConfigurationProperties能够产生可被IDEs使用的元数据文件。具体参考[Appendix B, Configuration meta-data](http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#configuration-metadata)。
+
 * 第3方配置
-* 相关绑定
+
+正如使用@ConfigurationProperties注解一个类，你也可以在@Bean方法上使用它。当你需要绑定属性到不受你控制的第三方组件时，这种方式非常有用。
+
+为了从Environment属性配置一个bean，将@ConfigurationProperties添加到它的bean注册过程：
+```java
+@ConfigurationProperties(prefix = "foo")
+@Bean
+public FooComponent fooComponent() {
+    ...
+}
+```
+和上面ConnectionSettings的示例方式相同，任何以foo为前缀的属性定义都会被映射到FooComponent上。
+
+* 松散的绑定（Relaxed binding）
+
+Spring Boot使用一些宽松的规则用于绑定Environment属性到@ConfigurationProperties beans，所以Environment属性名和bean属性名不需要精确匹配。常见的示例中有用的包括虚线分割（比如，context--path绑定到contextPath）和将环境属性转为大写字母（比如，PORT绑定port）。
+
+示例：
+```java
+@Component
+@ConfigurationProperties(prefix="person")
+public class ConnectionSettings {
+    private String firstName;
+}
+```
+下面的属性名都能用于上面的@ConfigurationProperties类：
+
+| 属性        | 说明   |
+| --------    | :----- |
+|person.firstName|标准驼峰规则|
+|person.first-name|虚线表示，推荐用于.properties和.yml文件中|
+|PERSON_FIRST_NAME|大写形式，使用系统环境变量时推荐|
+
+Spring会尝试强制外部的应用属性在绑定到@ConfigurationProperties beans时类型是正确的。如果需要自定义类型转换，你可以提供一个ConversionService bean（bean id为conversionService）或自定义属性编辑器（通过一个CustomEditorConfigurer bean）。
+
 * @ConfigurationProperties校验 
+
+Spring Boot将尝试校验外部的配置，默认使用JSR-303（如果在classpath路径中）。你可以轻松的为你的@ConfigurationProperties类添加JSR-303 javax.validation约束注解：
+```java
+@Component
+@ConfigurationProperties(prefix="connection")
+public class ConnectionSettings {
+    @NotNull
+    private InetAddress remoteAddress;
+    // ... getters and setters
+}
+```
+你也可以通过创建一个叫做configurationPropertiesValidator的bean来添加自定义的Spring Validator。
+
+**注**：spring-boot-actuator模块包含一个暴露所有@ConfigurationProperties beans的端点。简单地将你的web浏览器指向/configprops或使用等效的JMX端点。具体参考[Production ready features](http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#production-ready-endpoints)。
 
 ### Profiles
 * 添加激活的配置(profiles)
@@ -241,12 +442,3 @@ random.int*语法是OPEN value (,max) CLOSE，此处OPEN，CLOSE可以是任何�
   6. SpEL表达式条件
 
 ### WebSockets
-
-
-
-
-
-
-
-
-
