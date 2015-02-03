@@ -388,11 +388,86 @@ spring.profiles.include: proddb,prodmq
 application.properties（或application.yml）和通过@ConfigurationProperties引用的文件这两种配置特定变种都被当作文件来加载的，具体参考[Section 23.3, “Profile specific properties”](http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#boot-features-external-config-profile-specific-properties)。
 
 ### 日志
+Spring Boot内部日志系统使用的是[Commons Logging](http://commons.apache.org/logging)，但开放底层的日志实现。默认为会[Java Util Logging](http://docs.oracle.com/javase/7/docs/api/java/util/logging/package-summary.html), [Log4J](http://logging.apache.org/log4j/), [Log4J2](http://logging.apache.org/log4j/2.x/)和[Logback](http://logback.qos.ch/)提供配置。每种情况下都会预先配置使用控制台输出，也可以使用可选的文件输出。
+
+默认情况下，如果你使用'Starter POMs'，那么就会使用Logback记录日志。为了确保那些使用Java Util Logging, Commons Logging, Log4J或SLF4J的依赖库能够正常工作，正确的Logback路由也被包含进来。
+
+**注**：如果上面的列表看起来令人困惑，不要担心，Java有很多可用的日志框架。通常，你不需要改变日志依赖，Spring Boot默认的就能很好的工作。
+
 * 日志格式
+
+Spring Boot默认的日志输出格式如下：
+```java
+2014-03-05 10:57:51.112  INFO 45469 --- [           main] org.apache.catalina.core.StandardEngine  : Starting Servlet Engine: Apache Tomcat/7.0.52
+2014-03-05 10:57:51.253  INFO 45469 --- [ost-startStop-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2014-03-05 10:57:51.253  INFO 45469 --- [ost-startStop-1] o.s.web.context.ContextLoader            : Root WebApplicationContext: initialization completed in 1358 ms
+2014-03-05 10:57:51.698  INFO 45469 --- [ost-startStop-1] o.s.b.c.e.ServletRegistrationBean        : Mapping servlet: 'dispatcherServlet' to [/]
+2014-03-05 10:57:51.702  INFO 45469 --- [ost-startStop-1] o.s.b.c.embedded.FilterRegistrationBean  : Mapping filter: 'hiddenHttpMethodFilter' to: [/*]
+```
+输出的节点（items）如下：
+1. 日期和时间 - 精确到毫秒，且易于排序。
+2. 日志级别 - ERROR, WARN, INFO, DEBUG 或 TRACE。
+3. Process ID。
+4. 一个用于区分实际日志信息开头的---分隔符。
+5. 线程名 - 包括在方括号中（控制台输出可能会被截断）。
+6. 日志名 - 通常是源class的类名（缩写）。
+7. 日志信息。
+
 * 控制台输出
+
+默认的日志配置会在写日志消息时将它们回显到控制台。默认，ERROR, WARN和INFO级别的消息会被记录。可以在启动应用时，通过`--debug`标识开启控制台的DEBUG级别日志记录。
+```shell
+$ java -jar myapp.jar --debug
+```
+如果你的终端支持ANSI，为了增加可读性将会使用彩色的日志输出。你可以设置`spring.output.ansi.enabled`为一个[支持的值](http://docs.spring.io/spring-boot/docs/1.2.2.BUILD-SNAPSHOT/api/org/springframework/boot/ansi/AnsiOutput.Enabled.html)来覆盖自动检测。
+
 * 文件输出
+
+默认情况下，Spring Boot只会将日志记录到控制台而不会写进日志文件。如果除了输出到控制台你还想写入到日志文件，那你需要设置`logging.file`或`logging.path`属性（例如在你的application.properties中）。
+
+下表显示`logging.*`如何组合使用：
+
+|logging.file|logging.path| 示例 | 描述  |
+| --------   | :-----  | :-----  | :-----|
+|  (none)    | (none)  |         | 只记录到控制台 |
+|Specific file|(none)|my.log|写到特定的日志文件里，名称可以是一个精确的位置或相对于当前目录|
+|(none)|Specific folder|/var/log|写到特定文件夹下的spring.log里，名称可以是一个精确的位置或相对于当前目录|
+
+日志文件每达到10M就会被轮换（分割），和控制台一样，默认记录ERROR, WARN和INFO级别的信息。
+
 * 日志级别
+
+所有支持的日志系统在Spring的Environment（例如在application.properties里）都有通过'logging.level.*=LEVEL'（'LEVEL'是TRACE, DEBUG, INFO, WARN, ERROR, FATAL, OFF中的一个）设置的日志级别。
+
+示例：application.properties
+```java
+logging.level.org.springframework.web: DEBUG
+logging.level.org.hibernate: ERROR
+```
 * 自定义日志配置
+
+通过将适当的库添加到classpath，可以激活各种日志系统。然后在classpath的根目录(root)或通过Spring Environment的`logging.config`属性指定的位置提供一个合适的配置文件来达到进一步的定制（注意由于日志是在ApplicationContext被创建之前初始化的，所以不可能在Spring的@Configuration文件中，通过@PropertySources控制日志。系统属性和平常的Spring Boot外部配置文件能正常工作）。
+
+根据你的日志系统，下面的文件会被加载：
+
+| 日志系统        | 定制   |
+| --------   | :-----:  | 
+|Logback|logback.xml|
+|Log4j|log4j.properties或log4j.xml|
+|Log4j2|log4j2.xml|
+|JDK (Java Util Logging)|logging.properties|
+
+为了帮助定制一些其他的属性，从Spring的Envrionment转换到系统属性：
+
+| Spring Environment| System Property| 评价 |
+| --------   | :-----:  | :----:  |
+|logging.file|LOG_FILE|如果定义，在默认的日志配置中使用|
+|logging.path|LOG_PATH|如果定义，在默认的日志配置中使用|
+|PID|PID|当前的处理进程(process)ID（如果能够被发现且还没有作为操作系统环境变量被定义）|
+
+所有支持的日志系统在解析它们的配置文件时都能查询系统属性。具体可以参考spring-boot.jar中的默认配置。
+
+**注**：在运行可执行的jar时，Java Util Logging有类加载问题，我们建议你尽可能避免使用它。
 
 ### 开发Web应用
 * Spring Web MVC框架
