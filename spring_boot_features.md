@@ -405,6 +405,7 @@ Spring Boot默认的日志输出格式如下：
 2014-03-05 10:57:51.702  INFO 45469 --- [ost-startStop-1] o.s.b.c.embedded.FilterRegistrationBean  : Mapping filter: 'hiddenHttpMethodFilter' to: [/*]
 ```
 输出的节点（items）如下：
+
 1. 日期和时间 - 精确到毫秒，且易于排序。
 2. 日志级别 - ERROR, WARN, INFO, DEBUG 或 TRACE。
 3. Process ID。
@@ -425,7 +426,7 @@ $ java -jar myapp.jar --debug
 
 默认情况下，Spring Boot只会将日志记录到控制台而不会写进日志文件。如果除了输出到控制台你还想写入到日志文件，那你需要设置`logging.file`或`logging.path`属性（例如在你的application.properties中）。
 
-下表显示`logging.*`如何组合使用：
+下表显示如何组合使用`logging.*`：
 
 |logging.file|logging.path| 示例 | 描述  |
 | --------   | :-----  | :-----  | :-----|
