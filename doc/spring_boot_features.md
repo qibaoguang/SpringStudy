@@ -347,9 +347,45 @@ public class ConnectionSettings {
 **注**：spring-boot-actuator模块包含一个暴露所有@ConfigurationProperties beans的端点。简单地将你的web浏览器指向/configprops或使用等效的JMX端点。具体参考[Production ready features](http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#production-ready-endpoints)。
 
 ### Profiles
+Spring Profiles提供了一种隔离应用程序配置的方式，并让这些配置只能在特定的环境下生效。任何@Component或@Configuration都能被@Profile标记，从而限制加载它的时机。
+```java
+@Configuration
+@Profile("production")
+public class ProductionConfiguration {
+    // ...
+}
+```
+以正常的Spring方式，你可以使用一个spring.profiles.active的Environment属性来指定哪个配置生效。你可以使用平常的任何方式来指定该属性，例如，可以将它包含到你的application.properties中：
+```java
+spring.profiles.active=dev,hsqldb
+```
+或使用命令行开关：
+```shell
+--spring.profiles.active=dev,hsqldb
+```
 * 添加激活的配置(profiles)
+
+spring.profiles.active属性和其他属性一样都遵循相同的排列规则，最高的PropertySource获胜。也就是说，你可以在application.properties中指定生效的配置，然后使用命令行开关替换它们。
+
+有时，将特定的配置属性添加到生效的配置中而不是替换它们是有用的。spring.profiles.include属性可以用来无条件的添加生效的配置。SpringApplication的入口点也提供了一个用于设置额外配置的Java API（比如，在那些通过spring.profiles.active属性生效的配置之上）：参考setAdditionalProfiles()方法。
+
+示例：当一个应用使用下面的属性，并用`--spring.profiles.active=prod`开关运行，那proddb和prodmq配置也会生效：
+```java
+---
+my.property: fromyamlfile
+---
+spring.profiles: prod
+spring.profiles.include: proddb,prodmq
+```
+**注**：spring.profiles属性可以定义到一个YAML文档中，用于决定什么时候该文档被包含进配置中。具体参考[Section 63.6, “Change configuration depending on the environment”](http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#howto-change-configuration-depending-on-the-environment)
+
 * 以编程方式设置profiles
+
+在应用运行前，你可以通过调用SpringApplication.setAdditionalProfiles(…)方法，以编程的方式设置生效的配置。使用Spring的ConfigurableEnvironment接口激动配置也是可行的。
+
 * Profile特定配置文件
+
+application.properties（或application.yml）和通过@ConfigurationProperties引用的文件这两种配置特定变种都被当作文件来加载的，具体参考[Section 23.3, “Profile specific properties”](http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#boot-features-external-config-profile-specific-properties)。
 
 ### 日志
 * 日志格式
