@@ -471,13 +471,126 @@ logging.level.org.hibernate: ERROR
 **注**：在运行可执行的jar时，Java Util Logging有类加载问题，我们建议你尽可能避免使用它。
 
 ### 开发Web应用
+Spring Boot非常适合开发web应用程序。你可以使用内嵌的Tomcat，Jetty或Undertow轻轻松松地创建一个HTTP服务器。大多数的web应用都使用spring-boot-starter-web模块进行快速搭建和运行。
+
 * Spring Web MVC框架
+
+Spring Web MVC框架（通常简称为"Spring MVC"）是一个富"模型，视图，控制器"的web框架。
+Spring MVC允许你创建特定的@Controller或@RestController beans来处理传入的HTTP请求。
+使用@RequestMapping注解可以将控制器中的方法映射到相应的HTTP请求。
+
+示例：
+```java
+@RestController
+@RequestMapping(value="/users")
+public class MyRestController {
+
+    @RequestMapping(value="/{user}", method=RequestMethod.GET)
+    public User getUser(@PathVariable Long user) {
+        // ...
+    }
+
+    @RequestMapping(value="/{user}/customers", method=RequestMethod.GET)
+    List<Customer> getUserCustomers(@PathVariable Long user) {
+        // ...
+    }
+
+    @RequestMapping(value="/{user}", method=RequestMethod.DELETE)
+    public User deleteUser(@PathVariable Long user) {
+        // ...
+    }
+}
+```
 * Spring MVC自动配置
+
+Spring Boot为Spring MVC提供适用于多数应用的自动配置功能。在Spring默认基础上，自动配置添加了以下特性：
+
+1. 引入ContentNegotiatingViewResolver和BeanNameViewResolver beans。
+2. 对静态资源的支持，包括对WebJars的支持。
+3. 自动注册Converter，GenericConverter，Formatter beans。
+4. 对HttpMessageConverters的支持。
+5. 自动注册MessageCodeResolver。
+6. 对静态index.html的支持。
+7. 对自定义Favicon的支持。
+
+如果想全面控制Spring MVC，你可以添加自己的@Configuration，并使用@EnableWebMvc对其注解。如果想保留Spring Boot MVC的特性，并只是添加其他的[MVC配置](http://docs.spring.io/spring/docs/4.1.4.RELEASE/spring-framework-reference/htmlsingle#mvc)(拦截器，formatters，视图控制器等)，你可以添加自己的WebMvcConfigurerAdapter类型的@Bean（不使用@EnableWebMvc注解）。
+
 * HttpMessageConverters
+
+Spring MVC使用HttpMessageConverter接口转换HTTP请求和响应。合理的缺省值被包含的恰到好处（out of the box），例如对象可以自动转换为JSON（使用Jackson库）或XML（如果Jackson XML扩展可用则使用它，否则使用JAXB）。字符串默认使用UTF-8编码。
+
+如果需要添加或自定义转换器，你可以使用Spring Boot的HttpMessageConverters类：
+```java
+import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
+import org.springframework.context.annotation.*;
+import org.springframework.http.converter.*;
+
+@Configuration
+public class MyConfiguration {
+
+    @Bean
+    public HttpMessageConverters customConverters() {
+        HttpMessageConverter<?> additional = ...
+        HttpMessageConverter<?> another = ...
+        return new HttpMessageConverters(additional, another);
+    }
+}
+```
+任何在上下文中出现的HttpMessageConverter bean将会添加到converters列表，你可以通过这种方式覆盖默认的转换器（converters）。
+
 * MessageCodesResolver
+
+Spring MVC有一个策略，用于从绑定的errors产生用来渲染错误信息的错误码：MessageCodesResolver。如果设置`spring.mvc.message-codes-resolver.format`属性为`PREFIX_ERROR_CODE`或`POSTFIX_ERROR_CODE`（具体查看`DefaultMessageCodesResolver.Format`枚举值），Spring Boot会为你创建一个MessageCodesResolver。
+
 * 静态内容
+
+默认情况下，Spring Boot从classpath下一个叫/static（/public，/resources或/META-INF/resources）的文件夹或从ServletContext根目录提供静态内容。这使用了Spring MVC的ResourceHttpRequestHandler，所以你可以通过添加自己的WebMvcConfigurerAdapter并覆写addResourceHandlers方法来改变这个行为（加载静态文件）。
+
+在一个单独的web应用中，容器默认的servlet是开启的，如果Spring决定不处理某些请求，默认的servlet作为一个回退（降级）将从ServletContext根目录加载内容。大多数时候，这不会发生（除非你修改默认的MVC配置），因为Spring总能够通过DispatcherServlet处理请求。
+
+此外，上述标准的静态资源位置有个例外情况是[Webjars内容](http://www.webjars.org/)。任何在/webjars/**路径下的资源都将从jar文件中提供，只要它们以Webjars的格式打包。
+
+**注**：如果你的应用将被打包成jar，那就不要使用src/main/webapp文件夹。尽管该文件夹是一个共同的标准，但它仅在打包成war的情况下起作用，并且如果产生一个jar，多数构建工具都会静悄悄的忽略它。
+
 * 模板引擎
+
+正如REST web服务，你也可以使用Spring MVC提供动态HTML内容。Spring MVC支持各种各样的模板技术，包括Velocity, FreeMarker和JSPs。很多其他的模板引擎也提供它们自己的Spring MVC集成。
+
+Spring Boot为以下的模板引擎提供自动配置支持：
+
+1. [FreeMarker](http://freemarker.org/docs/)
+2. [Groovy](http://beta.groovy-lang.org/docs/groovy-2.3.0/html/documentation/markup-template-engine.html)
+3. [Thymeleaf](http://www.thymeleaf.org/)
+4. [Velocity](http://velocity.apache.org/)
+
+**注**：如果可能的话，应该忽略JSPs，因为在内嵌的servlet容器使用它们时存在一些[已知的限制](http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#boot-features-jsp-limitations)。
+
+当你使用这些引擎的任何一种，并采用默认的配置，你的模板将会从src/main/resources/templates目录下自动加载。
+
+**注**：IntelliJ IDEA根据你运行应用的方式会对classpath进行不同的整理。在IDE里通过main方法运行你的应用跟从Maven或Gradle或打包好的jar中运行相比会导致不同的顺序。这可能导致Spring Boot不能从classpath下成功地找到模板。如果遇到这个问题，你可以在IDE里重新对classpath进行排序，将模块的类和资源放到第一位。或者，你可以配置模块的前缀为classpath*:/templates/，这样会查找classpath下的所有模板目录。
+
 * 错误处理
+
+Spring Boot默认提供一个/error映射用来以合适的方式处理所有的错误，并且它在servlet容器中注册了一个全局的
+错误页面。对于机器客户端（相对于浏览器而言，浏览器偏重于人的行为），它会产生一个具有详细错误，HTTP状态，异常信息的JSON响应。对于浏览器客户端，它会产生一个白色标签样式（whitelabel）的错误视图，该视图将以HTML格式显示同样的数据（可以添加一个解析为erro的View来自定义它）。为了完全替换默认的行为，你可以实现ErrorController，并注册一个该类型的bean定义，或简单地添加一个ErrorAttributes类型的bean以使用现存的机制，只是替换显示的内容。
+
+如果在某些条件下需要比较多的错误页面，内嵌的servlet容器提供了一个统一的Java DSL（领域特定语言）来自定义错误处理。
+示例：
+```java
+@Bean
+public EmbeddedServletContainerCustomizer containerCustomizer(){
+    return new MyCustomizer();
+}
+
+// ...
+private static class MyCustomizer implements EmbeddedServletContainerCustomizer {
+    @Override
+    public void customize(ConfigurableEmbeddedServletContainer container) {
+        container.addErrorPages(new ErrorPage(HttpStatus.BAD_REQUEST, "/400"));
+    }
+}
+```
+
 * JAX-RS和Jersey
 * 内嵌servlet容器支持
   1. Servlets和Filters
