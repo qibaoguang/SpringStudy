@@ -590,6 +590,26 @@ private static class MyCustomizer implements EmbeddedServletContainerCustomizer 
     }
 }
 ```
+你也可以使用常规的Spring MVC特性来处理错误，比如[@ExceptionHandler方法](http://docs.spring.io/spring/docs/4.1.4.RELEASE/spring-framework-reference/htmlsingle/#mvc-exceptionhandlers)和[@ControllerAdvice](http://docs.spring.io/spring/docs/4.1.4.RELEASE/spring-framework-reference/htmlsingle/#mvc-ann-controller-advice)。ErrorController将会捡起任何没有处理的异常。
+
+N.B. 如果你为一个路径注册一个ErrorPage，最终被一个过滤器（Filter）处理（对于一些非Spring web框架，像Jersey和Wicket这很常见），然后过滤器需要显式注册为一个ERROR分发器（dispatcher）。
+```java
+@Bean
+public FilterRegistrationBean myFilter() {
+    FilterRegistrationBean registration = new FilterRegistrationBean();
+    registration.setFilter(new MyFilter());
+    ...
+    registration.setDispatcherTypes(EnumSet.allOf(DispatcherType.class));
+    return registration;
+}
+```
+**注**：默认的FilterRegistrationBean没有包含ERROR分发器类型。
+
+* Spring HATEOAS
+
+如果你正在开发一个使用超媒体的RESTful API，Spring Boot将为Spring HATEOAS提供自动配置，这在多数应用中都工作良好。自动配置替换了对使用@EnableHypermediaSupport的需求，并注册一定数量的beans来简化构建基于超媒体的应用，这些beans包括一个LinkDiscoverer和配置好的用于将响应正确编排为想要的表示的ObjectMapper。ObjectMapper可以根据spring.jackson.*属性或一个存在的Jackson2ObjectMapperBuilde bean进行自定义。
+
+通过使用@EnableHypermediaSupport，你可以控制Spring HATEOAS的配置。注意这会禁用上述的对ObjectMapper的自定义。
 
 * JAX-RS和Jersey
 * 内嵌servlet容器支持
