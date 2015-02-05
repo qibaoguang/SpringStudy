@@ -645,26 +645,26 @@ public class Endpoint {
 
 Spring Boot支持内嵌的Tomcat, Jetty和Undertow服务器。多数开发者只需要使用合适的'Starter POM'来获取一个完全配置好的实例即可。默认情况下，内嵌的服务器会在8080端口监听HTTP请求。
 
-1. Servlets和Filters
+1.Servlets和Filters
 
 当使用内嵌的servlet容器时，你可以直接将servlet和filter注册为Spring的beans。在配置期间，如果你想引用来自application.properties的值，这是非常方便的。默认情况下，如果上下文只包含单一的Servlet，那它将被映射到根路径（/）。在多Servlet beans的情况下，bean的名称将被用作路径的前缀。过滤器会被映射到/*。
     
 如果基于约定（convention-based）的映射不够灵活，你可以使用ServletRegistrationBean和FilterRegistrationBean类实现完全的控制。如果你的bean实现了ServletContextInitializer接口，也可以直接注册它们。
 
-2. EmbeddedWebApplicationContext
+2.EmbeddedWebApplicationContext
 
 Spring Boot底层使用了一个新的ApplicationContext类型，用于对内嵌servlet容器的支持。EmbeddedWebApplicationContext是一个特殊类型的WebApplicationContext，它通过搜索一个单一的EmbeddedServletContainerFactory bean来启动自己。通常，TomcatEmbeddedServletContainerFactory，JettyEmbeddedServletContainerFactory或UndertowEmbeddedServletContainerFactory将被自动配置。
 
 **注**：你通常不需要知道这些实现类。大多数应用将被自动配置，并根据你的行为创建合适的ApplicationContext和EmbeddedServletContainerFactory。
 
-3. 自定义内嵌servlet容器
+3.自定义内嵌servlet容器
 
 常见的Servlet容器设置可以通过Spring Environment属性进行配置。通常，你会把这些属性定义到application.properties文件中。
 常见的服务器设置包括：
 
-++ server.port - 进来的HTTP请求的监听端口号
-++ server.address - 绑定的接口地址
-++ server.sessionTimeout - session超时时间
+1. server.port - 进来的HTTP请求的监听端口号
+2. server.address - 绑定的接口地址
+3. server.sessionTimeout - session超时时间
 
 具体参考[ServerProperties](http://github.com/spring-projects/spring-boot/tree/master/spring-boot-autoconfigure/src/main/java/org/springframework/boot/autoconfigure/web/ServerProperties.java)。
 
@@ -698,17 +698,46 @@ public EmbeddedServletContainerFactory servletContainer() {
 ```
 很多可选的配置都提供了setter方法，也提供了一些受保护的钩子方法以满足你的某些特殊需求。具体参考相关文档。
 
-4. JSP的限制
+4.JSP的限制
 
 在内嵌的servlet容器中运行一个Spring Boot应用时（并打包成一个可执行的存档archive），容器对JSP的支持有一些限制。
 
-++ tomcat只支持war的打包方式，不支持可执行的jar。
-++ 内嵌的Jetty目前不支持JSPs。
-++ Undertow不支持JSPs。
+1. tomcat只支持war的打包方式，不支持可执行的jar。
+2. 内嵌的Jetty目前不支持JSPs。
+3. Undertow不支持JSPs。
 
 这里有个[JSP示例](http://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples/spring-boot-sample-web-jsp)，你可以查看如何设置相关事项。
 
 ### 安全
+如果Spring Security在classpath下，那么web应用默认对所有的HTTP路径（也称为终点，端点，表示API的具体网址）使用'basic'认证。为了给web应用添加方法级别的保护，你可以添加@EnableGlobalMethodSecurity并使用想要的设置。其他信息参考[Spring Security Reference](http://docs.spring.io/spring-security/site/docs/3.2.5.RELEASE/reference/htmlsingle#jc-method)。
+
+默认的AuthenticationManager有一个单一的user（'user'的用户名和随机密码会在应用启动时以INFO日志级别打印出来）。如下：
+```java
+Using default security password: 78fa095d-3f4c-48b1-ad50-e24c31d5cf35
+```
+**注**：如果你对日志配置进行微调，确保`org.springframework.boot.autoconfigure.security`类别能记录INFO信息，否则默认的密码不会被打印。
+
+你可以通过提供`security.user.password`改变默认的密码。这些和其他有用的属性通过[SecurityProperties](http://github.com/spring-projects/spring-boot/tree/master/spring-boot-autoconfigure/src/main/java/org/springframework/boot/autoconfigure/security/SecurityProperties.java)（以security为前缀的属性）被外部化了。
+
+默认的安全配置（security configuration）是在SecurityAutoConfiguration和导入的类中实现的（SpringBootWebSecurityConfiguration用于web安全，AuthenticationManagerConfiguration用于与非web应用也相关的认证配置）。你可以添加一个@EnableWebSecurity bean来彻底关掉Spring Boot的默认配置。为了对它进行自定义，你需要使用外部的属性配置和WebSecurityConfigurerAdapter类型的beans（比如，添加基于表单的登陆）。在[Spring Boot示例](http://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples/)里有一些安全相关的应用可以带你体验常见的用例。
+
+在一个web应用中你能得到的基本特性如下：
+
+1. 一个使用内存存储的AuthenticationManager bean和唯一的user（查看SecurityProperties.User获取user的属性）。
+2. 忽略（不保护）常见的静态资源路径（`/css/**, /js/**, /images/**`和 `**/favicon.ico`）。
+3. 对其他的路径实施HTTP Basic安全保护。
+4. 安全相关的事件会发布到Spring的ApplicationEventPublisher（成功和失败的认证，拒绝访问）。
+5. Spring Security提供的常见底层特性（HSTS, XSS, CSRF, 缓存）默认都被开启。
+
+上述所有特性都能打开和关闭，或使用外部的配置进行修改（security.*）。为了覆盖访问规则（access rules）而不改变其他自动配置的特性，你可以添加一个使用@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)注解的WebSecurityConfigurerAdapter类型的@Bean。
+
+如果Actuator也在使用，你会发现：
+
+1. 即使应用路径不受保护，被管理的路径也会受到保护。
+2. 安全相关的事件被转换为AuditEvents（审计事件），并发布给AuditService。
+3. 默认的用户有ADMIN和USER的角色。
+
+使用外部属性能够修改Actuator（执行器）的安全特性（management.security.*）。为了覆盖应用程序的访问规则，你可以添加一个WebSecurityConfigurerAdapter类型的@Bean。同时，如果不想覆盖执行器的访问规则，你可以使用@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)注解该bean，否则使用@Order(ManagementServerProperties.ACCESS_OVERRIDE_ORDER)注解该bean。
 
 ### 使用SQL数据库
 * 配置DataSource
