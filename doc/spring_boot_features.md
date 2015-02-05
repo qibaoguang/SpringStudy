@@ -646,21 +646,30 @@ public class Endpoint {
 Spring Boot支持内嵌的Tomcat, Jetty和Undertow服务器。多数开发者只需要使用合适的'Starter POM'来获取一个完全配置好的实例即可。默认情况下，内嵌的服务器会在8080端口监听HTTP请求。
 
 1. Servlets和Filters
-    当使用内嵌的servlet容器时，你可以直接将servlet和filter注册为Spring的beans。在配置期间，如果你想引用来自application.properties的值，这是非常方便的。默认情况下，如果上下文只包含单一的Servlet，那它将被映射到根路径（/）。在多Servlet beans的情况下，bean的名称将被用作路径的前缀。过滤器会被映射到/*。
-    如果基于约定（convention-based）的映射不够灵活，你可以使用ServletRegistrationBean和FilterRegistrationBean类实现完全的控制。如果你的bean实现了ServletContextInitializer接口，也可以直接注册它们。
+
+当使用内嵌的servlet容器时，你可以直接将servlet和filter注册为Spring的beans。在配置期间，如果你想引用来自application.properties的值，这是非常方便的。默认情况下，如果上下文只包含单一的Servlet，那它将被映射到根路径（/）。在多Servlet beans的情况下，bean的名称将被用作路径的前缀。过滤器会被映射到/*。
+    
+如果基于约定（convention-based）的映射不够灵活，你可以使用ServletRegistrationBean和FilterRegistrationBean类实现完全的控制。如果你的bean实现了ServletContextInitializer接口，也可以直接注册它们。
+
 2. EmbeddedWebApplicationContext
-    Spring Boot底层使用了一个新的ApplicationContext类型，用于对内嵌servlet容器的支持。EmbeddedWebApplicationContext是一个特殊类型的WebApplicationContext，它通过搜索一个单一的EmbeddedServletContainerFactory bean来启动自己。通常，TomcatEmbeddedServletContainerFactory，JettyEmbeddedServletContainerFactory或UndertowEmbeddedServletContainerFactory将被自动配置。
+
+Spring Boot底层使用了一个新的ApplicationContext类型，用于对内嵌servlet容器的支持。EmbeddedWebApplicationContext是一个特殊类型的WebApplicationContext，它通过搜索一个单一的EmbeddedServletContainerFactory bean来启动自己。通常，TomcatEmbeddedServletContainerFactory，JettyEmbeddedServletContainerFactory或UndertowEmbeddedServletContainerFactory将被自动配置。
+
 **注**：你通常不需要知道这些实现类。大多数应用将被自动配置，并根据你的行为创建合适的ApplicationContext和EmbeddedServletContainerFactory。
+
 3. 自定义内嵌servlet容器
+
 常见的Servlet容器设置可以通过Spring Environment属性进行配置。通常，你会把这些属性定义到application.properties文件中。
 常见的服务器设置包括：
-    1. server.port - 进来的HTTP请求的监听端口号
-    2. server.address - 绑定的接口地址
-    3. server.sessionTimeout - session超时时间
+
+++ server.port - 进来的HTTP请求的监听端口号
+++ server.address - 绑定的接口地址
+++ server.sessionTimeout - session超时时间
 
 具体参考[ServerProperties](http://github.com/spring-projects/spring-boot/tree/master/spring-boot-autoconfigure/src/main/java/org/springframework/boot/autoconfigure/web/ServerProperties.java)。
 
-#### 编程方式的自定义
+**编程方式的自定义**
+
 如果需要以编程的方式配置内嵌的servlet容器，你可以注册一个实现EmbeddedServletContainerCustomizer接口的Spring bean。EmbeddedServletContainerCustomizer提供对ConfigurableEmbeddedServletContainer的访问，ConfigurableEmbeddedServletContainer包含很多自定义的setter方法。
 ```java
 import org.springframework.boot.context.embedded.*;
@@ -674,7 +683,8 @@ public class CustomizationBean implements EmbeddedServletContainerCustomizer {
     }
 }
 ```
-#### 直接自定义ConfigurableEmbeddedServletContainer
+**直接自定义ConfigurableEmbeddedServletContainer**
+
 如果上面的自定义手法过于受限，你可以自己注册TomcatEmbeddedServletContainerFactory，JettyEmbeddedServletContainerFactory或UndertowEmbeddedServletContainerFactory。
 ```java
 @Bean
@@ -687,11 +697,15 @@ public EmbeddedServletContainerFactory servletContainer() {
 }
 ```
 很多可选的配置都提供了setter方法，也提供了一些受保护的钩子方法以满足你的某些特殊需求。具体参考相关文档。
+
 4. JSP的限制
+
 在内嵌的servlet容器中运行一个Spring Boot应用时（并打包成一个可执行的存档archive），容器对JSP的支持有一些限制。
-    1. tomcat只支持war的打包方式，不支持可执行的jar。
-    2. 内嵌的Jetty目前不支持JSPs。
-    3. Undertow不支持JSPs。
+
+++ tomcat只支持war的打包方式，不支持可执行的jar。
+++ 内嵌的Jetty目前不支持JSPs。
+++ Undertow不支持JSPs。
+
 这里有个[JSP示例](http://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples/spring-boot-sample-web-jsp)，你可以查看如何设置相关事项。
 
 ### 安全
