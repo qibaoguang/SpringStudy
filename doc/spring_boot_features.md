@@ -746,7 +746,7 @@ Spring框架为使用SQL数据库提供了广泛的支持。从使用JdbcTemplat
 
 Java的javax.sql.DataSource接口提供了一个标准的使用数据库连接的方法。传统做法是，一个DataSource使用一个URL连同相应的证书去初始化一个数据库连接。
 
-1. 对内嵌数据库的支持
+**1.对内嵌数据库的支持**
 
 开发应用时使用内存数据库是很实用的。显而易见地，内存数据库不需要提供持久化存储。你不需要在应用启动时填充数据库，也不需要在应用结束时丢弃数据。
 
@@ -766,7 +766,7 @@ Spring Boot可以自动配置的内嵌数据库包括[H2](http://www.h2database.
 ```
 **注**：对于自动配置的内嵌数据库，你需要依赖spring-jdbc。在示例中，它通过`spring-boot-starter-data-jpa`被传递地拉过来了。
 
-2. 连接到一个生产环境数据库
+**2.连接到一个生产环境数据库**
 
 在生产环境中，数据库连接可以使用DataSource池进行自动配置。下面是选取一个特定实现的算法：
 
@@ -790,7 +790,7 @@ spring.datasource.driver-class-name=com.mysql.jdbc.Driver
 
 **注**：既然Spring Boot能够从大多数数据库的url上推断出driver-class-name，那么你就不需要再指定它了。对于一个将要创建的DataSource连接池，我们需要能够验证Driver是否可用，所以我们会在做任何事情之前检查它。比如，如果你设置spring.datasource.driverClassName=com.mysql.jdbc.Driver，然后这个类就会被加载。
 
-3. 连接到一个JNDI数据库
+**3.连接到一个JNDI数据库**
 
 如果正在将Spring Boot应用部署到一个应用服务器，你可能想要用应用服务器内建的特性来配置和管理你的DataSource，并使用JNDI访问它。
 
@@ -828,7 +828,7 @@ Java持久化API是一个允许你将对象映射为关系数据库的标准技�
 
 **注**：我们不想在这涉及太多关于JPA或Spring Data的细节。你可以参考来自[spring.io](http://spring.io/)的指南[使用JPA获取数据](http://spring.io/guides/gs/accessing-data-jpa/)，并阅读[Spring Data JPA](http://projects.spring.io/spring-data-jpa/)和[Hibernate](http://hibernate.org/orm/documentation/)的参考文档。
 
-1. 实体类
+**1.实体类**
 
 传统上，JPA实体类被定义到一个persistence.xml文件中。在Spring Boot中，这个文件不是必需的，并被'实体扫描'替代。默认情况下，在你主（main）配置类（被@EnableAutoConfiguration或@SpringBootApplication注解的类）下的所有包都将被查找。
 
@@ -876,7 +876,7 @@ public class City implements Serializable {
 ```
 **注**：你可以使用@EntityScan注解自定义实体扫描路径。具体参考[Section 67.4, “Separate @Entity definitions from Spring configuration”](http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#howto-separate-entity-definitions-from-spring-configuration)。
 
-2. Spring Data JPA仓库
+**2.Spring Data JPA仓库**
 
 Spring Data JPA仓库（repositories）是用来定义访问数据的接口。根据你的方法名，JPA查询会被自动创建。比如，一个CityRepository接口可能声明一个findAllByState(String state)方法，用来查找给定状态的所有城市。
 
@@ -900,7 +900,7 @@ public interface CityRepository extends Repository<City, Long> {
 ```
 **注**：我们仅仅触及了Spring Data JPA的表面。具体查看它的[参考指南](http://projects.spring.io/spring-data-jpa/)。
 
-3. 创建和删除JPA数据库
+**3.创建和删除JPA数据库**
 
 默认情况下，只有在你使用内嵌数据库（H2, HSQL或Derby）时，JPA数据库才会被自动创建。你可以使用spring.jpa.*属性显示的设置JPA。比如，为了创建和删除表你可以将下面的配置添加到application.properties中：
 ```java
